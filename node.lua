@@ -1,7 +1,7 @@
 -- BNO055 demo: rotating video + optional logo + optional ticker (robust)
 
-gl.setup(1920, 1080)
-local W, H = 1920, 1080
+gl.setup(NATIVE_WIDTH, NATIVE_HEIGHT)
+local W, H = NATIVE_WIDTH, NATIVE_HEIGHT
 
 local angle = 0
 local vid = nil
@@ -17,6 +17,12 @@ util.data_mapper{
         angle = tonumber(new_angle) or 0
     end
 }
+
+local function clamp(v, lo, hi)
+    if v < lo then return lo end
+    if v > hi then return hi end
+    return v
+end
 
 local function safe_load_image(asset)
     local ok, img = pcall(resource.load_image, asset)
@@ -42,7 +48,6 @@ local function load_logo()
 
     if asset == last_logo_asset and logo then return end
     last_logo_asset = asset
-
     logo = asset and safe_load_image(asset) or nil
 end
 
@@ -51,7 +56,6 @@ local function load_video()
     if type(CONFIG.video) == "table" and CONFIG.video.asset_name then
         asset = CONFIG.video.asset_name
     else
-        -- optional fallback (nur wenn du example.mp4 wirklich im Package hast)
         asset = nil
     end
 
@@ -85,26 +89,34 @@ local function draw_logo()
     end
 
     local margin = tonumber(CONFIG.logo_margin) or 30
-    local h = tonumber(CONFIG.logo_height) or 90
     local pos = CONFIG.logo_pos or "top_right"
 
     local a = tonumber(CONFIG.logo_opacity)
     if a == nil then a = 1 end
-    if a < 0 then a = 0 end
-    if a > 1 then a = 1 end
+    a = clamp(a, 0, 1)
 
-    -- size() kann auf manchen Builds/Objekten anders sein → absichern
     local okS, iw, ih = pcall(function() return logo:size() end)
-    if not okS then
-        print("logo:size failed:", iw)
-        return
-    end
-    if not iw or not ih or ih == 0 then
-        print("logo:size returned invalid:", tostring(iw), tostring(ih))
+    if not okS or not iw or not ih or ih == 0 then
+        print("logo:size invalid")
         return
     end
 
+    -- gewünschte Höhe aus Config, aber automatisch begrenzen:
+    -- max 12% Bildschirmhöhe, damit es sicher ins Bild passt
+    local cfg_h = tonumber(CONFIG.logo_height) or 90
+    local max_h = math.floor(H * 0.12)
+    local h = clamp(cfg_h, 10, max_h)
+
+    -- Breite entsprechend Bildformat
     local w = h * (iw / ih)
+
+    -- Zusätzlich: max 25% Bildschirmbreite
+    local max_w = W * 0.25
+    if w > max_w then
+        local scale = max_w / w
+        w = w * scale
+        h = h * scale
+    end
 
     local x, y = margin, margin
     if pos == "top_right" then
@@ -115,29 +127,21 @@ local function draw_logo()
         x, y = W - w - margin, H - h - margin
     end
 
-    -- DEBUG: always draw a visible label at the computed logo position
-    font:write(x, y + h + 10, "LOGO DEBUG", 40, 1,0,0,1)
+    -- Clamp: nie aus dem Bild
+    x = clamp(x, margin, W - w - margin)
+    y = clamp(y, margin, H - h - margin)
 
-    -- Force opacity to 1 for debugging
-    gl.color(1, 1, 1, 1)
+    -- DEBUG label
+    font:write(x, y + h + 8, "LOGO DEBUG", 34, 1,0,0,1)
 
+    gl.color(1, 1, 1, a)
     local okD, errD = pcall(function()
-        -- draw at computed position
         logo:draw(x, y, x + w, y + h)
     end)
     if not okD then
         print("logo:draw failed:", errD)
     end
-
     gl.color(1, 1, 1, 1)
-
-    -- EXTRA DEBUG: draw logo also at a fixed position/size (must be visible!)
-    local okD2, errD2 = pcall(function()
-        logo:draw(50, 50, 450, 250)
-    end)
-    if not okD2 then
-        print("logo fixed draw failed:", errD2)
-    end
 end
 
 local function draw_ticker()
@@ -148,7 +152,10 @@ local function draw_ticker()
     local speed = tonumber(CONFIG.ticker_speed) or 160
     local gap = tonumber(CONFIG.ticker_gap) or 80
 
-    local y = H - size - 30
+    -- Ticker auch begrenzen, damit er nicht aus dem Bild läuft
+    size = clamp(size, 12, math.floor(H * 0.08))
+
+    local y = H - size - 20
     local tw = font:width(text, size)
     local x = W - ((sys.now() * speed) % (tw + W + gap))
 
@@ -171,22 +178,19 @@ function node.render()
 
     gl.popMatrix()
 
-    -- Draw ticker first so it stays visible even if logo rendering fails
+    -- Ticker zuerst (damit Logo-Probleme ihn nicht “wegnehmen”)
     local okT, errT = pcall(draw_ticker)
-    if not okT then
-        print("draw_ticker failed:", errT)
-    end
+    if not okT then print("draw_ticker failed:", errT) end
 
     local okL, errL = pcall(draw_logo)
-    if not okL then
-        print("draw_logo failed:", errL)
-    end
+    if not okL then print("draw_logo failed:", errL) end
 
     -- Debug overlay
-    font:write(20, 20,  "show_logo: " .. tostring(CONFIG.show_logo), 40, 1,1,0,1)
-    font:write(20, 65,  "show_ticker: " .. tostring(CONFIG.show_ticker), 40, 1,1,0,1)
+    font:write(20, 20,  "show_logo: " .. tostring(CONFIG.show_logo), 34, 1,1,0,1)
+    font:write(20, 55,  "show_ticker: " .. tostring(CONFIG.show_ticker), 34, 1,1,0,1)
+    font:write(20, 90,  "W/H: " .. tostring(W) .. "x" .. tostring(H), 34, 1,1,0,1)
 
     local logo_asset = (type(CONFIG.logo)=="table" and CONFIG.logo.asset_name) and CONFIG.logo.asset_name or "(nil)"
-    font:write(20, 110, "logo.asset: " .. tostring(logo_asset), 30, 1,1,0,1)
-    font:write(20, 150, "logo obj: " .. tostring(logo ~= nil), 40, 1,1,0,1)
+    font:write(20, 125, "logo.asset: " .. tostring(logo_asset), 28, 1,1,0,1)
+    font:write(20, 155, "logo obj: " .. tostring(logo ~= nil), 34, 1,1,0,1)
 end
