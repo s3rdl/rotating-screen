@@ -126,6 +126,7 @@ function node.render()
 
     if vid then
     util.draw_correct(vid, -WIDTH/2, -HEIGHT/2, WIDTH/2, HEIGHT/2)
+    font:write(20, 20, "overlay code active", 40, 1,1,1,1)
 end
 
     gl.popMatrix()
