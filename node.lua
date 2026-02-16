@@ -3,6 +3,12 @@ gl.setup(1920, 1080)
 local angle = 0
 local vid = nil
 
+local font = resource.load_font "OpenSans-Bold.ttf"
+local ticker = "Ticker TEST"
+local tsize = 60
+local speed = 160
+local gap = 80
+
 util.data_mapper{
     rotate = function(new_angle)
         angle = tonumber(new_angle) or 0
@@ -30,6 +36,10 @@ function node.render()
     gl.clear(0, 0, 0, 1)
 
     gl.pushMatrix()
+    local tw = font:width(ticker, tsize)
+    local x = WIDTH - ((sys.now() * speed) % (tw + WIDTH + gap))
+    font:write(x, HEIGHT - tsize - 30, ticker, tsize, 1,1,1,1)
+    font:write(x + tw + gap, HEIGHT - tsize - 30, ticker, tsize, 1,1,1,1)
     gl.translate(WIDTH/2, HEIGHT/2)
     gl.rotate(angle, 0, 0, 1)
     gl.scale(2, 2, 1)
