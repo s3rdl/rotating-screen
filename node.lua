@@ -114,9 +114,14 @@ local function draw_logo()
         x, y = WIDTH - w - margin, HEIGHT - h - margin
     end
 
-    gl.color(1, 1, 1, a)
+    -- DEBUG: always draw a visible label at the computed logo position
+    font:write(x, y + h + 10, "LOGO DEBUG", 40, 1,0,0,1)
+
+    -- Force opacity to 1 for debugging
+    gl.color(1, 1, 1, 1)
 
     local okD, errD = pcall(function()
+        -- draw at computed position
         logo:draw(x, y, x + w, y + h)
     end)
     if not okD then
@@ -124,6 +129,14 @@ local function draw_logo()
     end
 
     gl.color(1, 1, 1, 1)
+
+-- EXTRA DEBUG: draw logo also at a fixed position/size (must be visible!)
+local okD2, errD2 = pcall(function()
+    logo:draw(50, 50, 450, 250)
+end)
+if not okD2 then
+    print("logo fixed draw failed:", errD2)
+end
 end
 
 local function draw_ticker()
