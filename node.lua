@@ -114,7 +114,7 @@ local function draw_logo()
         h = h * s
     end
 
-    -- SAFE placement: centered at top inside safe area (avoids overscan edge issues)
+    -- SAFE placement: centered at top inside safe area
     local x = OX + (SAFE_W - w) / 2
     local y = OY + margin
 
@@ -134,9 +134,9 @@ local function draw_ticker()
     local text = CONFIG.ticker_text or ""
     if text == "" then return end
 
-    local size = tonumber(CONFIG.ticker_font_size) or 60
+    local size  = tonumber(CONFIG.ticker_font_size) or 60
     local speed = tonumber(CONFIG.ticker_speed) or 160
-    local gap = tonumber(CONFIG.ticker_gap) or 80
+    local gap   = tonumber(CONFIG.ticker_gap) or 80
 
     size = clamp(size, 12, math.floor(SAFE_H * 0.08))
 
@@ -152,6 +152,7 @@ end
 function node.render()
     gl.clear(0, 0, 0, 1)
 
+    -- 1) VIDEO: rotates + scales (as before)
     gl.pushMatrix()
     gl.translate(OX + SAFE_W/2, OY + SAFE_H/2)
     gl.rotate(angle, 0, 0, 1)
@@ -160,9 +161,16 @@ function node.render()
     if vid then
         util.draw_correct(vid, -SAFE_W/2, -SAFE_H/2, SAFE_W/2, SAFE_H/2)
     end
-
     gl.popMatrix()
+
+    -- 2) OVERLAYS: rotate with video, BUT DO NOT scale (keeps ticker visible/readable)
+    gl.pushMatrix()
+    gl.translate(OX + SAFE_W/2, OY + SAFE_H/2)
+    gl.rotate(angle, 0, 0, 1)
+    gl.translate(-(OX + SAFE_W/2), -(OY + SAFE_H/2))
 
     pcall(draw_ticker)
     pcall(draw_logo)
+
+    gl.popMatrix()
 end
