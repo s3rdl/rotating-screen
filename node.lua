@@ -1,12 +1,11 @@
--- BNO055 demo: rotating video + optional logo + optional ticker (robust + safe area)
+-- BNO055 demo: rotating video + optional logo + optional ticker (production)
 
 gl.setup(NATIVE_WIDTH, NATIVE_HEIGHT)
 
--- Native output size
 local NW, NH = NATIVE_WIDTH, NATIVE_HEIGHT
 
--- Safe area as percentage of native size (strong overscan-safe default)
-local SAFE_SCALE_W = 0.79
+-- Safe area (adjust scale if needed)
+local SAFE_SCALE_W = 0.80
 local SAFE_SCALE_H = 0.80
 local SAFE_W = math.floor(NW * SAFE_SCALE_W)
 local SAFE_H = math.floor(NH * SAFE_SCALE_H)
@@ -38,14 +37,12 @@ end
 local function safe_load_image(asset)
     local ok, img = pcall(resource.load_image, asset)
     if ok then return img end
-    print("logo load failed:", asset, img)
     return nil
 end
 
 local function safe_load_video(asset)
     local ok, v = pcall(resource.load_video, { file = asset, looped = true })
     if ok then return v end
-    print("video load failed:", asset, v)
     return nil
 end
 
@@ -80,9 +77,6 @@ local function load_video()
 
     if asset then
         vid = safe_load_video(asset)
-        if vid then print("Video:", asset) end
-    else
-        print("No video configured")
     end
 end
 
@@ -94,10 +88,7 @@ end)
 
 local function draw_logo()
     if CONFIG.show_logo == false then return end
-    if not logo then
-        print("logo is nil")
-        return
-    end
+    if not logo then return end
 
     local margin = tonumber(CONFIG.logo_margin) or 30
     local pos = CONFIG.logo_pos or "top_right"
@@ -107,19 +98,15 @@ local function draw_logo()
     a = clamp(a, 0, 1)
 
     local okS, iw, ih = pcall(function() return logo:size() end)
-    if not okS or not iw or not ih or ih == 0 then
-        print("logo:size invalid")
-        return
-    end
+    if not okS or not iw or not ih or ih == 0 then return end
 
-    -- config height, but keep it reasonable inside SAFE_H
+    -- config height, but auto-limit inside safe area
     local cfg_h = tonumber(CONFIG.logo_height) or 90
     local max_h = math.floor(SAFE_H * 0.12)
     local h = clamp(cfg_h, 10, max_h)
 
     local w = h * (iw / ih)
 
-    -- also cap width
     local max_w = SAFE_W * 0.25
     if w > max_w then
         local s = max_w / w
@@ -136,31 +123,23 @@ local function draw_logo()
         x, y = SAFE_W - w - margin, SAFE_H - h - margin
     end
 
-    -- clamp within safe area
     x = clamp(x, margin, SAFE_W - w - margin)
     y = clamp(y, margin, SAFE_H - h - margin)
 
-    -- apply safe-area offset
     x = x + OX
     y = y + OY
 
-    -- DEBUG label (should now be safely inside)
-    font:write(x, y + h + 8, "LOGO DEBUG", 34, 1,0,0,1)
-
     gl.color(1, 1, 1, a)
-    local okD, errD = pcall(function()
-        logo:draw(x, y, x + w, y + h)
-    end)
-    if not okD then
-        print("logo:draw failed:", errD)
-    end
+    logo:draw(x, y, x + w, y + h)
     gl.color(1, 1, 1, 1)
 end
 
 local function draw_ticker()
     if CONFIG.show_ticker == false then return end
 
-    local text = CONFIG.ticker_text or "Ticker TEST"
+    local text = CONFIG.ticker_text or ""
+    if text == "" then return end
+
     local size = tonumber(CONFIG.ticker_font_size) or 60
     local speed = tonumber(CONFIG.ticker_speed) or 160
     local gap = tonumber(CONFIG.ticker_gap) or 80
@@ -179,7 +158,6 @@ end
 function node.render()
     gl.clear(0, 0, 0, 1)
 
-    -- rotated video, centered in SAFE area
     gl.pushMatrix()
     gl.translate(OX + SAFE_W/2, OY + SAFE_H/2)
     gl.rotate(angle, 0, 0, 1)
@@ -191,19 +169,6 @@ function node.render()
 
     gl.popMatrix()
 
-    -- ticker first
-    local okT, errT = pcall(draw_ticker)
-    if not okT then print("draw_ticker failed:", errT) end
-
-    local okL, errL = pcall(draw_logo)
-    if not okL then print("draw_logo failed:", errL) end
-
-    -- Debug overlay (inside SAFE area)
-    font:write(OX + 20, OY + 20,  "show_logo: " .. tostring(CONFIG.show_logo), 34, 1,1,0,1)
-    font:write(OX + 20, OY + 55,  "show_ticker: " .. tostring(CONFIG.show_ticker), 34, 1,1,0,1)
-    font:write(OX + 20, OY + 90,  "SAFE: " .. SAFE_W .. "x" .. SAFE_H .. "  OFF: " .. OX .. "," .. OY, 28, 1,1,0,1)
-
-    local logo_asset = (type(CONFIG.logo)=="table" and CONFIG.logo.asset_name) and CONFIG.logo.asset_name or "(nil)"
-    font:write(OX + 20, OY + 120, "logo.asset: " .. tostring(logo_asset), 26, 1,1,0,1)
-    font:write(OX + 20, OY + 150, "logo obj: " .. tostring(logo ~= nil), 34, 1,1,0,1)
+    draw_ticker()
+    draw_logo()
 end
