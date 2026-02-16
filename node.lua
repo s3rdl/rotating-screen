@@ -167,3 +167,5 @@ function node.render()
     if not okT then
         print("draw_ticker failed:", errT)
     end
+    font:write(20, 100, "show_logo: "..tostring(CONFIG.show_logo), 40, 1,1,0,1)
+    font:write(20, 150, "show_ticker: "..tostring(CONFIG.show_ticker), 40, 1,1,0,1)
