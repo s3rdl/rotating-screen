@@ -37,6 +37,7 @@ end
 local function safe_load_image(asset)
     local ok, img = pcall(resource.load_image, asset)
     if ok then return img end
+    print("logo load failed:", tostring(asset), tostring(img))
     return nil
 end
 
@@ -122,7 +123,12 @@ local function draw_logo()
     y = y + OY
 
     gl.color(1, 1, 1, a)
-    logo:draw(x, y, x + w, y + h)
+    local okD, errD = pcall(function()
+        logo:draw(x, y, x + w, y + h)
+    end)
+    if not okD then
+        print("logo draw failed:", tostring(errD))
+    end
     gl.color(1, 1, 1, 1)
 end
 
