@@ -137,7 +137,7 @@ function node.render()
     gl.popMatrix()
 
     -- Debug (optional): shows code is active
-    font:write(20, 20, "overlay code active", 40, 1,1,1,1)
+    font:write(20, 20, "VERSION 7", 40, 1,1,1,1)
 
     -- Overlays (not rotated)
     draw_logo()
