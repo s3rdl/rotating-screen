@@ -98,13 +98,23 @@ local function draw_ticker()
     x = x + OX + ox
 
     -- color (rgba array 0..1)
-    local c = CONFIG.ticker_color
+        -- color from setup (type "color")
     local r,g,b,a = 1,1,1,1
+    local c = CONFIG.ticker_color
     if type(c) == "table" then
-        r = tonumber(c[1]) or 1
-        g = tonumber(c[2]) or 1
-        b = tonumber(c[3]) or 1
-        a = tonumber(c[4]) or 1
+        -- most common: { rgba = {r,g,b,a}, ... }
+        if type(c.rgba) == "table" then
+            r = tonumber(c.rgba[1]) or r
+            g = tonumber(c.rgba[2]) or g
+            b = tonumber(c.rgba[3]) or b
+            a = tonumber(c.rgba[4]) or a
+        else
+            -- fallback: [r,g,b,a]
+            r = tonumber(c[1]) or r
+            g = tonumber(c[2]) or g
+            b = tonumber(c[3]) or b
+            a = tonumber(c[4]) or a
+        end
     end
 
     font:write(x, y, text, size, r,g,b,a)
