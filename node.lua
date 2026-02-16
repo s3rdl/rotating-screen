@@ -38,20 +38,19 @@ local function load_logo()
 end
 
 util.json_watch("config.json", function(config)
-    CONFIG = config or {}
-
-    if CONFIG.video and CONFIG.video.asset_name then
-        if vid then
-            vid:dispose()
-            vid = nil
-        end
-        vid = resource.load_video{
-            file = CONFIG.video.asset_name,
-            looped = true,
-        }
+    if vid then
+        vid:dispose()
+        vid = nil
     end
 
-    load_logo()
+    if config.video and config.video.asset_name then
+        vid = resource.load_video{
+            file = config.video.asset_name,
+            looped = true,
+        }
+    else
+        print("No video configured in setup")
+    end
 end)
 
 local function draw_logo()
