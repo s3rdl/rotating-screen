@@ -8,7 +8,7 @@
     { "title": "Ticker", "type": "section" },
 
     { "title": "Ticker anzeigen", "ui_width": 3, "name": "show_ticker", "type": "boolean", "default": true },
-    { "title": "Ticker-Text", "ui_width": 9, "name": "ticker_text", "type": "string", "default": "BNO055 Demo • Ticker konfigurierbar über Setup-UI" },
+    { "title": "Ticker-Text", "ui_width": 9, "name": "ticker_text", "type": "string", "default": "Type your message here" },
 
     {
       "title": "Ticker-Position",
