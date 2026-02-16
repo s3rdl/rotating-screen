@@ -156,27 +156,10 @@ end
 function node.render()
     gl.clear(0, 0, 0, 1)
 
-    -- rotated video, always fit into safe area
     gl.pushMatrix()
-
-    -- center in safe area
     gl.translate(OX + SAFE_W/2, OY + SAFE_H/2)
-
-    -- rotation
     gl.rotate(angle, 0, 0, 1)
-
-    -- fit-scale depending on angle so nothing gets cropped
-    local rad = (angle or 0) * math.pi / 180
-    local c = math.abs(math.cos(rad))
-    local s = math.abs(math.sin(rad))
-
-    -- bounding box of rotated SAFE_W x SAFE_H rectangle
-    local bw = c * SAFE_W + s * SAFE_H
-    local bh = s * SAFE_W + c * SAFE_H
-
-    local k = math.min(SAFE_W / bw, SAFE_H / bh)
-
-    gl.scale(k, k, 1)
+    gl.scale(2, 2, 1)
 
     if vid then
         util.draw_correct(vid, -SAFE_W/2, -SAFE_H/2, SAFE_W/2, SAFE_H/2)
