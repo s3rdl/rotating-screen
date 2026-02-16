@@ -1,4 +1,5 @@
--- BNO055 demo: rotating video + optional logo + optional ticker
+-- BNO055 demo: rotating video + optional logo + optional ticker (robust)
+
 gl.setup(NATIVE_WIDTH, NATIVE_HEIGHT * 0.95)
 
 local angle = 0
@@ -16,12 +17,10 @@ util.data_mapper{
 }
 
 local function load_logo()
-    -- Hosted: resource option -> CONFIG.logo.asset_name
     local asset = nil
     if type(CONFIG.logo) == "table" and CONFIG.logo.asset_name then
         asset = CONFIG.logo.asset_name
     else
-        -- Fallback for local/dev
         asset = CONFIG.logo_file or "logo.png"
     end
 
@@ -37,28 +36,40 @@ local function load_logo()
     end
 end
 
-util.json_watch("config.json", function(config)
-    CONFIG = config or {}
+local function load_video()
+    local video_asset = nil
+    if type(CONFIG.video) == "table" and CONFIG.video.asset_name then
+        video_asset = CONFIG.video.asset_name
+    else
+        -- Fallback, wenn Setup (noch) nicht konfiguriert ist
+        video_asset = "example.mp4"
+    end
 
     if vid then
         vid:dispose()
         vid = nil
     end
 
-    if CONFIG.video and CONFIG.video.asset_name then
+    if video_asset and resource.exists(video_asset) then
         vid = resource.load_video{
-            file = CONFIG.video.asset_name,
+            file = video_asset,
             looped = true,
         }
+        print("Video asset:", video_asset)
     else
-        print("No video configured in setup")
+        vid = nil
+        print("Video missing:", tostring(video_asset))
     end
+end
 
+util.json_watch("config.json", function(config)
+    CONFIG = config or {}
+    load_video()
     load_logo()
 end)
 
 local function draw_logo()
-    print("show_logo:", CONFIG.show_logo)
+    -- nil => an, nur false => aus
     if CONFIG.show_logo == false then return end
     if not logo then load_logo() end
     if not logo then return end
@@ -88,16 +99,18 @@ local function draw_logo()
     end
 
     gl.color(1, 1, 1, a)
-    logo:draw(x, y, x + w, y + h, 1)
+    logo:draw(x, y, x + w, y + h)
     gl.color(1, 1, 1, 1)
 end
 
 local function draw_ticker()
-    print("show_ticker:", CONFIG.show_ticker)
+    -- nil => an, nur false => aus
     if CONFIG.show_ticker == false then return end
 
     local text = CONFIG.ticker_text or ""
-    if text == "" then return end
+    if text == "" then
+        text = "Ticker aktiv (setze ticker_text im Setup)"
+    end
 
     local size = tonumber(CONFIG.ticker_font_size) or 44
     local pad  = tonumber(CONFIG.ticker_padding) or 18
@@ -105,26 +118,28 @@ local function draw_ticker()
     local gap = tonumber(CONFIG.ticker_gap) or 60
 
     local bar_h = size + pad * 2
-    local y1 = HEIGHT - bar_h
-    local y2 = HEIGHT
+    local y = HEIGHT - bar_h + pad
 
-    gl.color(0, 0, 0, 0.55)
-    gl.rect(0, y1, WIDTH, y2)
-    gl.color(1, 1, 1, 1)
+    -- Hintergrund nur, wenn verfügbar (manche Builds haben kein gl.rect)
+    if gl.rect then
+        gl.color(0, 0, 0, 0.55)
+        gl.rect(0, HEIGHT - bar_h, WIDTH, HEIGHT)
+        gl.color(1, 1, 1, 1)
+    end
 
     local tw = font:width(text, size)
     local t = sys.now()
     local cycle = tw + WIDTH + gap
     local x = WIDTH - ((t * speed) % cycle)
 
-    font:write(x, y1 + pad, text, size, 1, 1, 1, 1)
-    font:write(x + tw + gap, y1 + pad, text, size, 1, 1, 1, 1)
+    font:write(x, y, text, size, 1, 1, 1, 1)
+    font:write(x + tw + gap, y, text, size, 1, 1, 1, 1)
 end
 
 function node.render()
     gl.clear(0, 0, 0, 1)
 
-    -- Rotated video
+    -- Rotiertes Video
     gl.pushMatrix()
     gl.translate(WIDTH/2, HEIGHT/2)
     gl.rotate(angle, 0, 0, 1)
@@ -132,14 +147,17 @@ function node.render()
 
     if vid then
         util.draw_correct(vid, -WIDTH/2, -HEIGHT/2, WIDTH/2, HEIGHT/2)
+    else
+        -- Debug, falls Video fehlt
+        font:write(-WIDTH/2 + 20, -HEIGHT/2 + 20, "NO VIDEO", 60, 1, 0, 0, 1)
     end
 
     gl.popMatrix()
 
-    -- Debug (optional): shows code is active
-    font:write(20, 20, "VERSION 7", 40, 1,1,1,1)
+    -- Debug-Version, damit du Updates sicher erkennst
+    font:write(20, 20, "VERSION 9", 40, 1,1,1,1)
 
-    -- Overlays (not rotated)
+    -- Overlays (nicht rotiert)
     draw_logo()
     draw_ticker()
 end
