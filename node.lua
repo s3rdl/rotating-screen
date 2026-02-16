@@ -54,6 +54,7 @@ util.json_watch("config.json", function(config)
 end)
 
 local function draw_logo()
+    print("show_logo:", CONFIG.show_logo)
     if not CONFIG.show_logo then return end
     if not logo then load_logo() end
     if not logo then return end
@@ -88,6 +89,7 @@ local function draw_logo()
 end
 
 local function draw_ticker()
+    print("show_ticker:", CONFIG.show_ticker)
     if not CONFIG.show_ticker then return end
 
     local text = CONFIG.ticker_text or ""
