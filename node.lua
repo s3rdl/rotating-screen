@@ -92,7 +92,6 @@ local function draw_logo()
     if not logo then return end
 
     local margin = tonumber(CONFIG.logo_margin) or 30
-    local pos = CONFIG.logo_pos or "top_right"
 
     local a = tonumber(CONFIG.logo_opacity)
     if a == nil then a = 1 end
@@ -101,26 +100,23 @@ local function draw_logo()
     local okS, iw, ih = pcall(function() return logo:size() end)
     if not okS or not iw or not ih or ih == 0 then return end
 
-    -- config height, but auto-limit inside safe area
-    local cfg_h = tonumber(CONFIG.logo_height) or 90
+    -- Use configured height, but cap it so it's guaranteed visible inside the safe area
     local h = tonumber(CONFIG.logo_height) or 90
+    h = clamp(h, 10, math.floor(SAFE_H * 0.25))
 
     local w = h * (iw / ih)
 
-    local x, y = margin, margin
-    if pos == "top_right" then
-        x, y = SAFE_W - w - margin, margin
-    elseif pos == "bottom_left" then
-        x, y = margin, SAFE_H - h - margin
-    elseif pos == "bottom_right" then
-        x, y = SAFE_W - w - margin, SAFE_H - h - margin
+    -- Also cap width to avoid super-wide logos spilling out
+    local max_w = SAFE_W - 2 * margin
+    if w > max_w then
+        local s = max_w / w
+        w = w * s
+        h = h * s
     end
 
-    x = clamp(x, margin, SAFE_W - w - margin)
-    y = clamp(y, margin, SAFE_H - h - margin)
-
-    x = x + OX
-    y = y + OY
+    -- SAFE placement: centered at top inside safe area (avoids overscan edge issues)
+    local x = OX + (SAFE_W - w) / 2
+    local y = OY + margin
 
     gl.color(1, 1, 1, a)
     local okD, errD = pcall(function()
