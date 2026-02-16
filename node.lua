@@ -125,8 +125,8 @@ function node.render()
     gl.scale(2, 2, 1)
 
     if vid then
-        util.draw_correct(vid, -WIDTH/2, -HEIGHT/2, WIDTH/2, HEIGHT/2)
-    end
+    util.draw_correct(vid, -WIDTH/2, -HEIGHT/2, WIDTH/2, HEIGHT/2)
+end
 
     gl.popMatrix()
 
