@@ -95,7 +95,7 @@ local function draw_logo()
     -- size() kann auf manchen Builds/Objekten anders sein → absichern
     local okS, iw, ih = pcall(function() return logo:size() end)
     if not okS then
-        print("logo:size failed:", iw) -- iw enthält dann die Fehlermeldung
+        print("logo:size failed:", iw)
         return
     end
     if not iw or not ih or ih == 0 then
@@ -157,15 +157,22 @@ function node.render()
 
     gl.popMatrix()
 
-    -- overlays not rotated
+    -- Draw ticker first so it stays visible even if logo rendering fails
+    local okT, errT = pcall(draw_ticker)
+    if not okT then
+        print("draw_ticker failed:", errT)
+    end
+
     local okL, errL = pcall(draw_logo)
     if not okL then
         print("draw_logo failed:", errL)
     end
 
-    local okT, errT = pcall(draw_ticker)
-    if not okT then
-        print("draw_ticker failed:", errT)
-    end
-    font:write(20, 100, "show_logo: "..tostring(CONFIG.show_logo), 40, 1,1,0,1)
-    font:write(20, 150, "show_ticker: "..tostring(CONFIG.show_ticker), 40, 1,1,0,1)
+    -- Debug overlay
+    font:write(20, 20,  "show_logo: " .. tostring(CONFIG.show_logo), 40, 1,1,0,1)
+    font:write(20, 65,  "show_ticker: " .. tostring(CONFIG.show_ticker), 40, 1,1,0,1)
+
+    local logo_asset = (type(CONFIG.logo)=="table" and CONFIG.logo.asset_name) and CONFIG.logo.asset_name or "(nil)"
+    font:write(20, 110, "logo.asset: " .. tostring(logo_asset), 30, 1,1,0,1)
+    font:write(20, 150, "logo obj: " .. tostring(logo ~= nil), 40, 1,1,0,1)
+end
