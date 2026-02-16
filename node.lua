@@ -6,8 +6,8 @@ gl.setup(NATIVE_WIDTH, NATIVE_HEIGHT)
 local NW, NH = NATIVE_WIDTH, NATIVE_HEIGHT
 
 -- Safe area as percentage of native size (strong overscan-safe default)
-local SAFE_SCALE_W = 0.75
-local SAFE_SCALE_H = 0.75
+local SAFE_SCALE_W = 0.80
+local SAFE_SCALE_H = 0.80
 local SAFE_W = math.floor(NW * SAFE_SCALE_W)
 local SAFE_H = math.floor(NH * SAFE_SCALE_H)
 
