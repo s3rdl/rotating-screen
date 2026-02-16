@@ -1,6 +1,7 @@
 -- BNO055 demo: rotating video + optional logo + optional ticker (robust)
 
 gl.setup(1920, 1080)
+local W, H = 1920, 1080
 
 local angle = 0
 local vid = nil
@@ -107,11 +108,11 @@ local function draw_logo()
 
     local x, y = margin, margin
     if pos == "top_right" then
-        x, y = WIDTH - w - margin, margin
+        x, y = W - w - margin, margin
     elseif pos == "bottom_left" then
-        x, y = margin, HEIGHT - h - margin
+        x, y = margin, H - h - margin
     elseif pos == "bottom_right" then
-        x, y = WIDTH - w - margin, HEIGHT - h - margin
+        x, y = W - w - margin, H - h - margin
     end
 
     -- DEBUG: always draw a visible label at the computed logo position
@@ -130,13 +131,13 @@ local function draw_logo()
 
     gl.color(1, 1, 1, 1)
 
--- EXTRA DEBUG: draw logo also at a fixed position/size (must be visible!)
-local okD2, errD2 = pcall(function()
-    logo:draw(50, 50, 450, 250)
-end)
-if not okD2 then
-    print("logo fixed draw failed:", errD2)
-end
+    -- EXTRA DEBUG: draw logo also at a fixed position/size (must be visible!)
+    local okD2, errD2 = pcall(function()
+        logo:draw(50, 50, 450, 250)
+    end)
+    if not okD2 then
+        print("logo fixed draw failed:", errD2)
+    end
 end
 
 local function draw_ticker()
@@ -147,9 +148,9 @@ local function draw_ticker()
     local speed = tonumber(CONFIG.ticker_speed) or 160
     local gap = tonumber(CONFIG.ticker_gap) or 80
 
-    local y = HEIGHT - size - 30
+    local y = H - size - 30
     local tw = font:width(text, size)
-    local x = WIDTH - ((sys.now() * speed) % (tw + WIDTH + gap))
+    local x = W - ((sys.now() * speed) % (tw + W + gap))
 
     font:write(x, y, text, size, 1,1,1,1)
     font:write(x + tw + gap, y, text, size, 1,1,1,1)
@@ -160,12 +161,12 @@ function node.render()
 
     -- video rotated
     gl.pushMatrix()
-    gl.translate(WIDTH/2, HEIGHT/2)
+    gl.translate(W/2, H/2)
     gl.rotate(angle, 0, 0, 1)
     gl.scale(2, 2, 1)
 
     if vid then
-        util.draw_correct(vid, -WIDTH/2, -HEIGHT/2, WIDTH/2, HEIGHT/2)
+        util.draw_correct(vid, -W/2, -H/2, W/2, H/2)
     end
 
     gl.popMatrix()
