@@ -1,5 +1,5 @@
 {
-    "name": "Rotating Video fork",
+    "name": "Rotating Video Ticker",
     "author": "Florian Wesch <fw@info-beamer.com>",
     "desc": "Demonstrate BNO055 sensor integration",
     "repository": "https://github.com/info-beamer/package-bno055-demo"
