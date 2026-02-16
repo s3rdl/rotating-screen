@@ -102,17 +102,9 @@ local function draw_logo()
 
     -- config height, but auto-limit inside safe area
     local cfg_h = tonumber(CONFIG.logo_height) or 90
-    local max_h = math.floor(SAFE_H * 0.12)
-    local h = clamp(cfg_h, 10, max_h)
+    local h = tonumber(CONFIG.logo_height) or 90
 
     local w = h * (iw / ih)
-
-    local max_w = SAFE_W * 0.25
-    if w > max_w then
-        local s = max_w / w
-        w = w * s
-        h = h * s
-    end
 
     local x, y = margin, margin
     if pos == "top_right" then
