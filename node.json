@@ -1,21 +1,34 @@
-{ "title": "Ticker", "type": "section" },
-
-{ "title": "Ticker anzeigen", "ui_width": 3, "name": "show_ticker", "type": "boolean", "default": true },
-{ "title": "Ticker-Text", "ui_width": 9, "name": "ticker_text", "type": "string", "default": "BNO055 Demo • Ticker konfigurierbar über Setup-UI" },
-
-{ "title": "Ticker-Position", "ui_width": 4, "name": "ticker_pos", "type": "select",
+{
+  "name": "Rotating Content",
+  "permissions": { "gpio": "yes", "serial": "yes" },
   "options": [
-    ["bottom", "Unten"],
-    ["top", "Oben"],
-    ["middle", "Mitte"]
-  ],
-  "default": "bottom"
-},
-{ "title": "Ticker-Offset X (px)", "ui_width": 4, "name": "ticker_offset_x", "type": "integer", "default": 0 },
-{ "title": "Ticker-Offset Y (px)", "ui_width": 4, "name": "ticker_offset_y", "type": "integer", "default": 0 },
+    { "title": "Video", "type": "section" },
+    { "title": "Video", "ui_width": 6, "name": "video", "type": "resource", "valid": ["video"], "default": "example.mp4" },
 
-{ "title": "Ticker-Textfarbe", "ui_width": 4, "name": "ticker_color", "type": "color", "default": [1,1,1,1] },
+    { "title": "Ticker", "type": "section" },
 
-{ "title": "Ticker-Speed", "ui_width": 3, "name": "ticker_speed", "type": "integer", "default": 120 },
-{ "title": "Ticker-Fontsize", "ui_width": 3, "name": "ticker_font_size", "type": "integer", "default": 44 },
-{ "title": "Ticker-Gap", "ui_width": 3, "name": "ticker_gap", "type": "integer", "default": 60 }
+    { "title": "Ticker anzeigen", "ui_width": 3, "name": "show_ticker", "type": "boolean", "default": true },
+    { "title": "Ticker-Text", "ui_width": 9, "name": "ticker_text", "type": "string", "default": "BNO055 Demo • Ticker konfigurierbar über Setup-UI" },
+
+    {
+      "title": "Ticker-Position",
+      "ui_width": 4,
+      "name": "ticker_pos",
+      "type": "select",
+      "options": [
+        ["bottom", "Unten"],
+        ["top", "Oben"],
+        ["middle", "Mitte"]
+      ],
+      "default": "bottom"
+    },
+    { "title": "Ticker-Offset X (px)", "ui_width": 4, "name": "ticker_offset_x", "type": "integer", "default": 0 },
+    { "title": "Ticker-Offset Y (px)", "ui_width": 4, "name": "ticker_offset_y", "type": "integer", "default": 0 },
+
+    { "title": "Ticker-Textfarbe", "ui_width": 4, "name": "ticker_color", "type": "color", "default": [1, 1, 1, 1] },
+
+    { "title": "Ticker-Speed", "ui_width": 3, "name": "ticker_speed", "type": "integer", "default": 120 },
+    { "title": "Ticker-Fontsize", "ui_width": 3, "name": "ticker_font_size", "type": "integer", "default": 44 },
+    { "title": "Ticker-Gap", "ui_width": 3, "name": "ticker_gap", "type": "integer", "default": 60 }
+  ]
+}
