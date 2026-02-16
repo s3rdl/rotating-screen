@@ -76,13 +76,39 @@ local function draw_ticker()
 
     size = clamp(size, 12, math.floor(SAFE_H * 0.08))
 
-    local y = (SAFE_H - size - 20) + OY
+    -- position preset
+    local pos = CONFIG.ticker_pos or "bottom"
+    local y_local
+    if pos == "top" then
+        y_local = 20
+    elseif pos == "middle" then
+        y_local = (SAFE_H - size) / 2
+    else
+        y_local = SAFE_H - size - 20
+    end
+
+    -- offsets (px)
+    local ox = tonumber(CONFIG.ticker_offset_x) or 0
+    local oy = tonumber(CONFIG.ticker_offset_y) or 0
+
+    local y = y_local + OY + oy
+
     local tw = font:width(text, size)
     local x = SAFE_W - ((sys.now() * speed) % (tw + SAFE_W + gap))
-    x = x + OX
+    x = x + OX + ox
 
-    font:write(x, y, text, size, 1,1,1,1)
-    font:write(x + tw + gap, y, text, size, 1,1,1,1)
+    -- color (rgba array 0..1)
+    local c = CONFIG.ticker_color
+    local r,g,b,a = 1,1,1,1
+    if type(c) == "table" then
+        r = tonumber(c[1]) or 1
+        g = tonumber(c[2]) or 1
+        b = tonumber(c[3]) or 1
+        a = tonumber(c[4]) or 1
+    end
+
+    font:write(x, y, text, size, r,g,b,a)
+    font:write(x + tw + gap, y, text, size, r,g,b,a)
 end
 
 function node.render()
