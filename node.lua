@@ -38,19 +38,23 @@ local function load_logo()
 end
 
 util.json_watch("config.json", function(config)
+    CONFIG = config or {}
+
     if vid then
         vid:dispose()
         vid = nil
     end
 
-    if config.video and config.video.asset_name then
+    if CONFIG.video and CONFIG.video.asset_name then
         vid = resource.load_video{
-            file = config.video.asset_name,
+            file = CONFIG.video.asset_name,
             looped = true,
         }
     else
         print("No video configured in setup")
     end
+
+    load_logo()
 end)
 
 local function draw_logo()
@@ -127,11 +131,13 @@ function node.render()
     gl.scale(2, 2, 1)
 
     if vid then
-    util.draw_correct(vid, -WIDTH/2, -HEIGHT/2, WIDTH/2, HEIGHT/2)
-    font:write(20, 20, "overlay code active", 40, 1,1,1,1)
-end
+        util.draw_correct(vid, -WIDTH/2, -HEIGHT/2, WIDTH/2, HEIGHT/2)
+    end
 
     gl.popMatrix()
+
+    -- Debug (optional): shows code is active
+    font:write(20, 20, "overlay code active", 40, 1,1,1,1)
 
     -- Overlays (not rotated)
     draw_logo()
