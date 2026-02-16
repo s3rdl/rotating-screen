@@ -59,7 +59,7 @@ end)
 
 local function draw_logo()
     print("show_logo:", CONFIG.show_logo)
-    if not CONFIG.show_logo then return end
+    if CONFIG.show_logo == false then return end
     if not logo then load_logo() end
     if not logo then return end
 
@@ -94,7 +94,7 @@ end
 
 local function draw_ticker()
     print("show_ticker:", CONFIG.show_ticker)
-    if not CONFIG.show_ticker then return end
+    if CONFIG.show_ticker == false then return end
 
     local text = CONFIG.ticker_text or ""
     if text == "" then return end
