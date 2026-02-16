@@ -1,7 +1,7 @@
 -- BNO055 demo: rotating video + optional logo + optional ticker (robust)
 
-gl.setup(NATIVE_WIDTH, NATIVE_HEIGHT)
-local W, H = NATIVE_WIDTH, NATIVE_HEIGHT
+local W, H = 1860, 960
+gl.setup(W, H)
 
 local angle = 0
 local vid = nil
