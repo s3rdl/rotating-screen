@@ -64,7 +64,21 @@ end
 
 util.json_watch("config.json", function(config)
     CONFIG = config or {}
-    load_video()
+
+    if vid then
+        vid:dispose()
+        vid = nil
+    end
+
+    if CONFIG.video and CONFIG.video.asset_name then
+        vid = resource.load_video{
+            file = CONFIG.video.asset_name,
+            looped = true,
+        }
+    else
+        print("No video configured in setup")
+    end
+
     load_logo()
 end)
 
