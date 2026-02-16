@@ -89,21 +89,19 @@ local function draw_logo()
     if a < 0 then a = 0 end
     if a > 1 then a = 1 end
 
-    local iw, ih = logo:size()
-    if not iw or not ih or ih == 0 then return end
+    local okS, iw, ih = pcall(function() return logo:size() end)
+    if not okS or not iw or not ih or ih == 0 then
+        print("logo:size failed")
+        return
+    end
     local w = h * (iw / ih)
 
-    local x, y = margin, margin
-    if pos == "top_right" then
-        x, y = WIDTH - w - margin, margin
-    elseif pos == "bottom_left" then
-        x, y = margin, HEIGHT - h - margin
-    elseif pos == "bottom_right" then
-        x, y = WIDTH - w - margin, HEIGHT - h - margin
+    local okD, errD = pcall(function()
+        logo:draw(x, y, x + w, y + h)
+    end)
+    if not okD then
+        print("logo:draw failed:", errD)
     end
-
-    gl.color(1, 1, 1, a)
-    logo:draw(x, y, x + w, y + h)
     gl.color(1, 1, 1, 1)
 end
 
@@ -139,6 +137,12 @@ function node.render()
     gl.popMatrix()
 
     -- overlays not rotated
-    draw_logo()
-    draw_ticker()
-end
+    local ok1, err1 = pcall(draw_logo)
+    if not ok1 then
+        print("draw_logo failed:", err1)
+    end
+
+    local ok2, err2 = pcall(draw_ticker)
+    if not ok2 then
+        print("draw_ticker failed:", err2)
+    end
