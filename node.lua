@@ -1,4 +1,4 @@
--- BNO055 demo: rotating video + optional logo + optional ticker (production)
+-- BNO055 demo: rotating video + rotating ticker (no logo)
 
 gl.setup(NATIVE_WIDTH, NATIVE_HEIGHT)
 
@@ -16,10 +16,7 @@ local OY = math.floor((NH - SAFE_H) / 2)
 local angle = 0
 local vid = nil
 local font = resource.load_font "OpenSans-Bold.ttf"
-
 local CONFIG = {}
-local logo = nil
-local last_logo_asset = nil
 local last_video_asset = nil
 
 util.data_mapper{
@@ -34,30 +31,11 @@ local function clamp(v, lo, hi)
     return v
 end
 
-local function safe_load_image(asset)
-    local ok, img = pcall(resource.load_image, asset)
-    if ok then return img end
-    print("logo load failed:", tostring(asset), tostring(img))
-    return nil
-end
-
 local function safe_load_video(asset)
     local ok, v = pcall(resource.load_video, { file = asset, looped = true })
     if ok then return v end
+    print("video load failed:", tostring(asset), tostring(v))
     return nil
-end
-
-local function load_logo()
-    local asset
-    if type(CONFIG.logo) == "table" and CONFIG.logo.asset_name then
-        asset = CONFIG.logo.asset_name
-    else
-        asset = CONFIG.logo_file or "logo.png"
-    end
-
-    if asset == last_logo_asset and logo then return end
-    last_logo_asset = asset
-    logo = asset and safe_load_image(asset) or nil
 end
 
 local function load_video()
@@ -84,49 +62,7 @@ end
 util.json_watch("config.json", function(config)
     CONFIG = config or {}
     load_video()
-    load_logo()
 end)
-
-local function draw_logo()
-    if CONFIG.show_logo == false then return end
-    if not logo then return end
-
-    local margin = tonumber(CONFIG.logo_margin) or 30
-
-    local a = tonumber(CONFIG.logo_opacity)
-    if a == nil then a = 1 end
-    a = clamp(a, 0, 1)
-
-    local okS, iw, ih = pcall(function() return logo:size() end)
-    if not okS or not iw or not ih or ih == 0 then return end
-
-    -- Use configured height, but cap it so it's guaranteed visible inside the safe area
-    local h = tonumber(CONFIG.logo_height) or 90
-    h = clamp(h, 10, math.floor(SAFE_H * 0.25))
-
-    local w = h * (iw / ih)
-
-    -- Also cap width to avoid super-wide logos spilling out
-    local max_w = SAFE_W - 2 * margin
-    if w > max_w then
-        local s = max_w / w
-        w = w * s
-        h = h * s
-    end
-
-    -- SAFE placement: centered at top inside safe area
-    local x = OX + (SAFE_W - w) / 2
-    local y = OY + margin
-
-    gl.color(1, 1, 1, a)
-    local okD, errD = pcall(function()
-        logo:draw(x, y, x + w, y + h)
-    end)
-    if not okD then
-        print("logo draw failed:", tostring(errD))
-    end
-    gl.color(1, 1, 1, 1)
-end
 
 local function draw_ticker()
     if CONFIG.show_ticker == false then return end
@@ -163,14 +99,13 @@ function node.render()
     end
     gl.popMatrix()
 
-    -- 2) OVERLAYS: rotate with video, BUT DO NOT scale (keeps ticker visible/readable)
+    -- 2) TICKER: rotate with video, BUT DO NOT scale (keeps it visible/readable)
     gl.pushMatrix()
     gl.translate(OX + SAFE_W/2, OY + SAFE_H/2)
     gl.rotate(angle, 0, 0, 1)
     gl.translate(-(OX + SAFE_W/2), -(OY + SAFE_H/2))
 
     pcall(draw_ticker)
-    pcall(draw_logo)
 
     gl.popMatrix()
 end
