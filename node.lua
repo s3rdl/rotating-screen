@@ -1,10 +1,10 @@
--- BNO055 demo: rotating video + rotating ticker (no logo)
+-- BNO055 demo: rotating video + optional logo + optional ticker (production)
 
 gl.setup(NATIVE_WIDTH, NATIVE_HEIGHT)
 
 local NW, NH = NATIVE_WIDTH, NATIVE_HEIGHT
 
--- Safe area (keep if your display overscans)
+-- Safe area (adjust scale if needed)
 local SAFE_SCALE_W = 0.80
 local SAFE_SCALE_H = 0.80
 local SAFE_W = math.floor(NW * SAFE_SCALE_W)
@@ -16,7 +16,11 @@ local OY = math.floor((NH - SAFE_H) / 2)
 local angle = 0
 local vid = nil
 local font = resource.load_font "OpenSans-Bold.ttf"
+
 local CONFIG = {}
+local logo = nil
+local last_logo_asset = nil
+local last_video_asset = nil
 
 util.data_mapper{
     rotate = function(new_angle)
@@ -30,18 +34,42 @@ local function clamp(v, lo, hi)
     return v
 end
 
-local function safe_load_video(asset)
-    local ok, v = pcall(resource.load_video, { file = asset, looped = true })
-    if ok then return v end
-    print("video load failed:", tostring(asset), tostring(v))
+local function safe_load_image(asset)
+    local ok, img = pcall(resource.load_image, asset)
+    if ok then return img end
+    print("logo load failed:", tostring(asset), tostring(img))
     return nil
 end
 
+local function safe_load_video(asset)
+    local ok, v = pcall(resource.load_video, { file = asset, looped = true })
+    if ok then return v end
+    return nil
+end
+
+local function load_logo()
+    local asset
+    if type(CONFIG.logo) == "table" and CONFIG.logo.asset_name then
+        asset = CONFIG.logo.asset_name
+    else
+        asset = CONFIG.logo_file or "logo.png"
+    end
+
+    if asset == last_logo_asset and logo then return end
+    last_logo_asset = asset
+    logo = asset and safe_load_image(asset) or nil
+end
+
 local function load_video()
-    local asset = nil
+    local asset
     if type(CONFIG.video) == "table" and CONFIG.video.asset_name then
         asset = CONFIG.video.asset_name
+    else
+        asset = nil
     end
+
+    if asset == last_video_asset and vid then return end
+    last_video_asset = asset
 
     if vid then
         vid:dispose()
@@ -56,56 +84,74 @@ end
 util.json_watch("config.json", function(config)
     CONFIG = config or {}
     load_video()
+    load_logo()
 end)
 
-local function draw_ticker_rotated()
+local function draw_logo()
+    if CONFIG.show_logo == false then return end
+    if not logo then return end
+
+    local margin = tonumber(CONFIG.logo_margin) or 30
+
+    local a = tonumber(CONFIG.logo_opacity)
+    if a == nil then a = 1 end
+    a = clamp(a, 0, 1)
+
+    local okS, iw, ih = pcall(function() return logo:size() end)
+    if not okS or not iw or not ih or ih == 0 then return end
+
+    -- Use configured height, but cap it so it's guaranteed visible inside the safe area
+    local h = tonumber(CONFIG.logo_height) or 90
+    h = clamp(h, 10, math.floor(SAFE_H * 0.25))
+
+    local w = h * (iw / ih)
+
+    -- Also cap width to avoid super-wide logos spilling out
+    local max_w = SAFE_W - 2 * margin
+    if w > max_w then
+        local s = max_w / w
+        w = w * s
+        h = h * s
+    end
+
+    -- SAFE placement: centered at top inside safe area (avoids overscan edge issues)
+    local x = OX + (SAFE_W - w) / 2
+    local y = OY + margin
+
+    gl.color(1, 1, 1, a)
+    local okD, errD = pcall(function()
+        logo:draw(x, y, x + w, y + h)
+    end)
+    if not okD then
+        print("logo draw failed:", tostring(errD))
+    end
+    gl.color(1, 1, 1, 1)
+end
+
+local function draw_ticker()
     if CONFIG.show_ticker == false then return end
 
     local text = CONFIG.ticker_text or ""
     if text == "" then return end
 
-    local size  = tonumber(CONFIG.ticker_font_size) or 60
+    local size = tonumber(CONFIG.ticker_font_size) or 60
     local speed = tonumber(CONFIG.ticker_speed) or 160
-    local gap   = tonumber(CONFIG.ticker_gap) or 80
-    local pad   = tonumber(CONFIG.ticker_padding) or 18
+    local gap = tonumber(CONFIG.ticker_gap) or 80
 
-    -- keep readable inside safe area
-    size = clamp(size, 12, math.floor(SAFE_H * 0.10))
-    pad  = clamp(pad, 0, 200)
-    gap  = clamp(gap, 0, 2000)
+    size = clamp(size, 12, math.floor(SAFE_H * 0.08))
 
-    -- We are inside rotated coordinate system centered at (0,0)
-    -- Draw ticker near bottom of safe area:
-    local base_y = SAFE_H/2 - (size + pad * 2) - 20
-
-    -- Optional background bar (only if supported)
-    local bg = CONFIG.ticker_bg
-    if bg == nil then bg = true end
-    if bg and gl.rect then
-        local a = tonumber(CONFIG.ticker_bg_opacity)
-        if a == nil then a = 0.55 end
-        a = clamp(a, 0, 1)
-        gl.color(0, 0, 0, a)
-        gl.rect(-SAFE_W/2, base_y - pad, SAFE_W/2, base_y + size + pad)
-        gl.color(1, 1, 1, 1)
-    end
-
+    local y = (SAFE_H - size - 20) + OY
     local tw = font:width(text, size)
-    local t = sys.now()
-    local cycle = tw + SAFE_W + gap
-    local x = SAFE_W/2 - ((t * speed) % cycle)
+    local x = SAFE_W - ((sys.now() * speed) % (tw + SAFE_W + gap))
+    x = x + OX
 
-    -- left padding: move text slightly away from left edge of bar
-    local y = base_y
-
-    font:write(x - SAFE_W/2 + pad, y, text, size, 1,1,1,1)
-    font:write(x - SAFE_W/2 + pad + tw + gap, y, text, size, 1,1,1,1)
+    font:write(x, y, text, size, 1,1,1,1)
+    font:write(x + tw + gap, y, text, size, 1,1,1,1)
 end
 
 function node.render()
     gl.clear(0, 0, 0, 1)
 
-    -- Everything in this block rotates (video + ticker)
     gl.pushMatrix()
     gl.translate(OX + SAFE_W/2, OY + SAFE_H/2)
     gl.rotate(angle, 0, 0, 1)
@@ -115,8 +161,8 @@ function node.render()
         util.draw_correct(vid, -SAFE_W/2, -SAFE_H/2, SAFE_W/2, SAFE_H/2)
     end
 
-    -- rotating ticker
-    pcall(draw_ticker_rotated)
-
     gl.popMatrix()
+
+    pcall(draw_ticker)
+    pcall(draw_logo)
 end
