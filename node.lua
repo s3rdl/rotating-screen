@@ -167,6 +167,6 @@ function node.render()
 
     gl.popMatrix()
 
-    draw_ticker()
-    draw_logo()
+    pcall(draw_ticker)
+    pcall(draw_logo)
 end
