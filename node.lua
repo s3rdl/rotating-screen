@@ -78,7 +78,10 @@ end)
 
 local function draw_logo()
     if CONFIG.show_logo == false then return end
-    if not logo then return end
+    if not logo then
+        print("logo is nil")
+        return
+    end
 
     local margin = tonumber(CONFIG.logo_margin) or 30
     local h = tonumber(CONFIG.logo_height) or 90
@@ -89,12 +92,29 @@ local function draw_logo()
     if a < 0 then a = 0 end
     if a > 1 then a = 1 end
 
+    -- size() kann auf manchen Builds/Objekten anders sein → absichern
     local okS, iw, ih = pcall(function() return logo:size() end)
-    if not okS or not iw or not ih or ih == 0 then
-        print("logo:size failed")
+    if not okS then
+        print("logo:size failed:", iw) -- iw enthält dann die Fehlermeldung
         return
     end
+    if not iw or not ih or ih == 0 then
+        print("logo:size returned invalid:", tostring(iw), tostring(ih))
+        return
+    end
+
     local w = h * (iw / ih)
+
+    local x, y = margin, margin
+    if pos == "top_right" then
+        x, y = WIDTH - w - margin, margin
+    elseif pos == "bottom_left" then
+        x, y = margin, HEIGHT - h - margin
+    elseif pos == "bottom_right" then
+        x, y = WIDTH - w - margin, HEIGHT - h - margin
+    end
+
+    gl.color(1, 1, 1, a)
 
     local okD, errD = pcall(function()
         logo:draw(x, y, x + w, y + h)
@@ -102,6 +122,7 @@ local function draw_logo()
     if not okD then
         print("logo:draw failed:", errD)
     end
+
     gl.color(1, 1, 1, 1)
 end
 
@@ -137,12 +158,12 @@ function node.render()
     gl.popMatrix()
 
     -- overlays not rotated
-    local ok1, err1 = pcall(draw_logo)
-    if not ok1 then
-        print("draw_logo failed:", err1)
+    local okL, errL = pcall(draw_logo)
+    if not okL then
+        print("draw_logo failed:", errL)
     end
 
-    local ok2, err2 = pcall(draw_ticker)
-    if not ok2 then
-        print("draw_ticker failed:", err2)
+    local okT, errT = pcall(draw_ticker)
+    if not okT then
+        print("draw_ticker failed:", errT)
     end
