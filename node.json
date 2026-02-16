@@ -5,32 +5,13 @@
     { "title": "Video", "type": "section" },
     { "title": "Video", "ui_width": 6, "name": "video", "type": "resource", "valid": ["video"], "default": "example.mp4" },
 
-    { "title": "Overlays", "type": "section" },
-
-    { "title": "Logo anzeigen", "ui_width": 3, "name": "show_logo", "type": "boolean", "default": true },
-    { "title": "Logo", "ui_width": 9, "name": "logo", "type": "resource", "valid": ["image"], "default": "logo.png" },
-    {
-      "title": "Logo-Position",
-      "ui_width": 4,
-      "name": "logo_pos",
-      "type": "select",
-      "options": [
-        ["top_left", "Oben links"],
-        ["top_right", "Oben rechts"],
-        ["bottom_left", "Unten links"],
-        ["bottom_right", "Unten rechts"]
-      ],
-      "default": "top_right"
-    },
-    { "title": "Logo-Rand (px)", "ui_width": 4, "name": "logo_margin", "type": "integer", "default": 30 },
-    { "title": "Logo-Höhe (px)", "ui_width": 4, "name": "logo_height", "type": "integer", "default": 90 },
-    { "title": "Logo-Deckkraft", "ui_width": 4, "name": "logo_opacity", "type": "float", "min": 0, "max": 1, "step": 0.05, "default": 1 },
+    { "title": "Ticker", "type": "section" },
 
     { "title": "Ticker anzeigen", "ui_width": 3, "name": "show_ticker", "type": "boolean", "default": true },
     { "title": "Ticker-Text", "ui_width": 9, "name": "ticker_text", "type": "string", "default": "BNO055 Demo • Ticker konfigurierbar über Setup-UI" },
+
     { "title": "Ticker-Speed", "ui_width": 3, "name": "ticker_speed", "type": "integer", "default": 120 },
     { "title": "Ticker-Fontsize", "ui_width": 3, "name": "ticker_font_size", "type": "integer", "default": 44 },
-    { "title": "Ticker-Padding", "ui_width": 3, "name": "ticker_padding", "type": "integer", "default": 18 },
     { "title": "Ticker-Gap", "ui_width": 3, "name": "ticker_gap", "type": "integer", "default": 60 }
   ]
 }
